@@ -1,10 +1,20 @@
+/**
+ * App controler, provides two functions:
+ * getStatus: returns the status of dbClient and RedisClient
+ * getStats: returns number of users and files in mongodb
+ */
+
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 
-export const getStatus = () => ({ redis: redisClient.isAlive(), db: dbClient.isAlive() });
+const getStatus = (req, res) => {
+  res.status(200).json({ redis: redisClient.isAlive(), db: dbClient.isAlive() });
+};
 
-export const getStats = async () => {
+const getStats = async (req, res) => {
   const users = await dbClient.nbUsers();
   const files = await dbClient.nbFiles();
-  return { users: `${users}`, files: `${files}` };
+  res.status(200).json({ users: `${users}`, files: `${files}` });
 };
+
+module.exports = { getStatus, getStats };
