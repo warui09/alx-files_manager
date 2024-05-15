@@ -8,6 +8,9 @@ const fs = require('fs');
 const { uuid } = require('uuidv4');
 const { getMe } = require('./UsersController');
 
+/**
+ * creates a new file in DB and in disk
+ */
 /* eslint-disable consistent-return */
 const postUpload = async (req, res) => {
   const { email, userId } = await getMe();
@@ -78,4 +81,48 @@ const postUpload = async (req, res) => {
   });
 };
 
-module.exports = { postUpload };
+/**
+ * retrieves the file document based on the ID
+ */
+const getShow = async (req, res) => {
+  const fileId = req.params.id;
+  const { email, userId } = await getMe();
+  if (!email || !userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const file = await dbClient.findOne({ fileId });
+
+  if (!file || file.length === 0) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  const filePath = file[0].localPath;
+  res.sendFile(filePath);
+};
+
+/**
+ * retrieves all users file documents for a specific parentId and paginates
+ * the results
+ */
+const getIndex = async (req, res) => {
+  const { email, userId } = await getMe();
+  if (!email || !userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const parentId = req.query.parentId || '0';
+  const page = parseInt(req.query.page, 10) || 0;
+  const limit = 20;
+  const skip = page * limit;
+
+  const files = await dbClient.aggregate([
+    { $match: { parentId } },
+    { $skip: skip },
+    { $limit: limit },
+  ]).toArray();
+
+  res.status(200).json({ files });
+};
+
+module.exports = { postUpload, getShow, getIndex };
