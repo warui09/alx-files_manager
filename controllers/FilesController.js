@@ -125,4 +125,45 @@ const getIndex = async (req, res) => {
   res.status(200).json({ files });
 };
 
-module.exports = { postUpload, getShow, getIndex };
+/**
+ * Sets isPublic to true on the file document based on the ID
+ */
+const putPublish = async (req, res) => {
+  const fileId = req.params.id;
+  const { email, userId } = await getMe();
+  if (!email || !userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const file = await dbClient.findOne({ fileId });
+  if (!file || file.length === 0) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  file.isPublic = true;
+  const filePath = file[0].localPath;
+  res.status(200).sendFile(filePath);
+};
+
+/**
+ * Sets isPublic to false on the file document based on the ID
+ */
+const putUnpublish = async (req, res) => {
+  const fileId = req.params.id;
+  const { email, userId } = await getMe();
+  if (!email || !userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const file = await dbClient.findOne({ fileId });
+  if (!file || file.length === 0) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  file.isPublic = false;
+  const filePath = file[0].localPath;
+  res.status(200).sendFile(filePath);
+};
+module.exports = {
+  postUpload, getShow, getIndex, putPublish, putUnpublish,
+};
