@@ -4,6 +4,8 @@
 
 import dbClient from '../utils/db';
 
+const mime = require('mime-types');
+const path = require('path');
 const fs = require('fs');
 const { uuid } = require('uuidv4');
 const { getMe } = require('./UsersController');
@@ -164,6 +166,36 @@ const putUnpublish = async (req, res) => {
   const filePath = file[0].localPath;
   res.status(200).sendFile(filePath);
 };
+
+/**
+ * Returns the content of the file document based on the ID
+ */
+const getFile = async (req, res) => {
+  const fileId = req.params.id;
+  const { email, userId } = await getMe();
+  const file = await dbClient.findOne({ _id: fileId });
+  if (!file || file.length === 0) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  if ((!file.isPublic && !email) || userId !== file.userId) {
+    res.status(404).json({ error: 'Not found' });
+  }
+
+  if (file.type === 'folder') {
+    res.status(400).json({ error: 'A folder doesn\'t have content' });
+  }
+
+  const filePath = path.join(process.env.FOLDER_PATH || '/tmp/files_manager', file.localPath);
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  const mimeType = mime.lookup(file.name);
+  res.setHeader('Content-Type', mimeType);
+  fs.createReadStream(filePath).pipe(res);
+};
+
 module.exports = {
-  postUpload, getShow, getIndex, putPublish, putUnpublish,
+  postUpload, getShow, getIndex, putPublish, putUnpublish, getFile,
 };
