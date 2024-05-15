@@ -9,10 +9,10 @@ class DBClient {
     const database = process.env.DB_DATABASE || 'files_manager';
     const uri = `mongodb://${host}:${port}`;
 
-    this.client = new MongoClient(uri);
+    this.client = new MongoClient(uri, { useUnifiedTopology: true });
     this.client.connect((err) => {
       if (err) {
-        console.error(`Error connecting to MongoDB: ${err}`);
+        console.error(err);
         return;
       }
       console.log('Connected to MongoDB');
