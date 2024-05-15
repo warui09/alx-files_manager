@@ -4,9 +4,10 @@
 
 import dbClient from '../utils/db';
 
-const mime = require('mime-types');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
+const Queue = require('bull');
+const mime = require('mime-types');
 const { uuid } = require('uuidv4');
 const { getMe } = require('./UsersController');
 
@@ -20,6 +21,7 @@ const postUpload = async (req, res) => {
   const { type } = req.body;
   const parentId = req.body.parentId || 0;
   const isPublic = req.body.isPublic || false;
+  const fileQueue = new Queue('generate thumbnails');
   let localPath = '';
 
   if (!email || !userId) {
@@ -79,6 +81,11 @@ const postUpload = async (req, res) => {
       localPath,
     };
     dbClient.insertOne(newFile);
+
+    if (newFile.type === 'image') {
+      fileQueue.add({ userId: newFile.userId, fileId: newFile.localPath });
+    }
+
     return res.status(201).json(newFile);
   });
 };
@@ -171,6 +178,7 @@ const putUnpublish = async (req, res) => {
  * Returns the content of the file document based on the ID
  */
 const getFile = async (req, res) => {
+  const size = req.params.size;
   const fileId = req.params.id;
   const { email, userId } = await getMe();
   const file = await dbClient.findOne({ _id: fileId });
@@ -197,5 +205,5 @@ const getFile = async (req, res) => {
 };
 
 module.exports = {
-  postUpload, getShow, getIndex, putPublish, putUnpublish, getFile,
+  postUpload, getShow, getIndex, putPublish, putUnpublish, getFile, fileQueue,
 };
