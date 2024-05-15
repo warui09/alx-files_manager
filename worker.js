@@ -1,5 +1,6 @@
 import dbClient from './utils/db';
 import fileQueue from './controllers/FilesController';
+import userQueue from './controllers/UsersController';
 
 const fs = require('fs').promises;
 const thumbnail = require('image-thumbnail');
@@ -36,12 +37,17 @@ fileQueue.process(async (job) => {
   await dbClient.close();
 });
 
-fileQueue.on('completed', (job) => {
-  console.log(`Job ${job.id} completed`);
-});
+userQueue.process(async (job) => {
+  const userId = job.data;
+  if (!userId) {
+    throw new Error('Missing userId');
+  }
 
-fileQueue.on('failed', (job, err) => {
-  console.error(`Job ${job.id} failed with error: ${err.message}`);
+  const user = await dbClient.find({ userId });
+  if (!user) {
+    throw new Error('User not found');
+  }
+  console.log(`Welcome ${user.email}`);
 });
 
 module.exports = fileQueue;

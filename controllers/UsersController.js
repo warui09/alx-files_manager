@@ -6,6 +6,10 @@ import sha1 from 'sha1';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 
+const Queue = require('bull');
+
+const userQueue = new Queue('send emails');
+
 const postNew = async (req, res) => {
   const { email, password } = req.body;
   if (!email) {
@@ -22,6 +26,7 @@ const postNew = async (req, res) => {
   const newUser = { email, password: hashedPassword };
   const result = await dbClient.insert(newUser);
   const insertedUser = { id: result.insertedId, email };
+  userQueue.add({ userId: result.insertedId });
   return res.status(201).json(insertedUser);
 };
 
@@ -36,4 +41,4 @@ const getMe = async (req, res) => {
   res.json({ email, id: userId });
 };
 
-module.exports = { postNew, getMe };
+module.exports = { postNew, getMe, userQueue };

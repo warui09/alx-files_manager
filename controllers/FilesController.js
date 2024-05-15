@@ -11,6 +11,8 @@ const mime = require('mime-types');
 const { uuid } = require('uuidv4');
 const { getMe } = require('./UsersController');
 
+const fileQueue = new Queue('generate thumbnails');
+
 /**
  * creates a new file in DB and in disk
  */
@@ -21,7 +23,6 @@ const postUpload = async (req, res) => {
   const { type } = req.body;
   const parentId = req.body.parentId || 0;
   const isPublic = req.body.isPublic || false;
-  const fileQueue = new Queue('generate thumbnails');
   let localPath = '';
 
   if (!email || !userId) {
@@ -178,7 +179,6 @@ const putUnpublish = async (req, res) => {
  * Returns the content of the file document based on the ID
  */
 const getFile = async (req, res) => {
-  const size = req.params.size;
   const fileId = req.params.id;
   const { email, userId } = await getMe();
   const file = await dbClient.findOne({ _id: fileId });
