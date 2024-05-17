@@ -4,8 +4,8 @@
  * getStats: returns number of users and files in mongodb
  */
 
-import dbClient from '../utils/db';
-import redisClient from '../utils/redis';
+const { dbClient } = require('../utils/db');
+const { redisClient } = require('../utils/redis');
 
 const getStatus = (req, res) => {
   res.status(200).json({ redis: redisClient.isAlive(), db: dbClient.isAlive() });

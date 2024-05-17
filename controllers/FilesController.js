@@ -2,7 +2,7 @@
  * module defines the files controller
  */
 
-import dbClient from '../utils/db';
+const { dbClient } = require('../utils/db');
 
 const fs = require('fs');
 const path = require('path');

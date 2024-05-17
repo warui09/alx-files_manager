@@ -2,9 +2,9 @@
  * User controler module, provides functions to add a user
  */
 
-import sha1 from 'sha1';
-import dbClient from '../utils/db';
-import redisClient from '../utils/redis';
+const { sha1 } = require('sha1');
+const { dbClient } = require('../utils/db');
+const { redisClient } = require('../utils/redis');
 
 const Queue = require('bull');
 
